@@ -1,0 +1,35 @@
+# Load X and y variable
+using JLD
+data = load("outliersData.jld")
+(X,y,Xtest,ytest) = (data["X"],data["y"],data["Xtest"],data["ytest"])
+
+# Fit a least squares model
+include("leastSquares.jl")
+#model = weightedLeastSquares(X,y,0)
+
+
+v1 = ones(400)
+v2 = ones(100)
+
+V = vcat(v1,0.1*v2)
+V = Diagonal(V)
+model = weightedLeastSquares(X,y,V)
+
+
+# Evaluate training error
+yhat = model.predict(X)
+trainError = mean((yhat - y).^2)
+@printf("Squared train Error with least squares: %.3f\n",trainError)
+
+# Evaluate test error
+yhat = model.predict(Xtest)
+testError = mean((yhat - ytest).^2)
+@printf("Squared test Error with least squares: %.3f\n",testError)
+
+# Plot model
+using PyPlot
+figure()
+plot(X,y,"b.")
+Xhat = minimum(X):.01:maximum(X)
+yhat = model.predict(Xhat)
+plot(Xhat,yhat,"g")
